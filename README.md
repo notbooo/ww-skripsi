@@ -48,7 +48,9 @@ Jangan andalkan satu HP saja untuk data skripsi — pakai minimal salah satu lap
 
 ## Deploy ke Vercel
 
-Tidak butuh env var atau backend — semua (OpenRouter key, Supabase URL/anon key, sync key) diisi runtime lewat menu *Atur* di app yang sudah live. `vercel.json` sudah mengarahkan semua route ke `index.html` (SPA, deep-link aman).
+Tanpa backend. Supabase URL/anon key + sync key sudah di-bake di `src/config.ts` (zero setup, semua perangkat berbagi data). `vercel.json` mengarahkan semua route ke `index.html` (SPA, deep-link aman).
+
+**Satu env var (hanya untuk fitur sintesis AI):** di Vercel → Project Settings → Environment Variables, tambah `VITE_OPENROUTER_API_KEY` = OpenRouter key, lalu **Redeploy**. Tanpa ini, pengumpulan data + cadangan cloud tetap jalan; hanya tombol sintesis BAB IV yang nonaktif. Untuk dev lokal, taruh di `.env.local` (sudah di-gitignore via `*.local`).
 
 **Cara tercepat — Vercel CLI:**
 

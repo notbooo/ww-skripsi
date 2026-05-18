@@ -15,7 +15,10 @@ export const SUPABASE_ANON_KEY =
 // Fixed shared row id. Same on every device → one shared dataset, zero setup.
 export const SYNC_KEY = "skripsi-foodwaste-9b3e7d2a6c414f08a5d91e8f2c7b40a6";
 
-// Paste an OpenRouter key here to enable AI synthesis (BAB IV). Leave "" to
-// disable synthesis. Anyone with the site can spend this key — set a hard
-// monthly spend limit on it in the OpenRouter dashboard.
-export const OPENROUTER_API_KEY = "";
+// OpenRouter key for AI synthesis (BAB IV). Sourced from a build-time env
+// var so the secret never enters git history. Set VITE_OPENROUTER_API_KEY in
+// Vercel → Project Settings → Environment Variables (and .env.local for local
+// dev). Empty = synthesis disabled; rest of the app is unaffected. It still
+// gets inlined into the public bundle — keep the key's spend cap low.
+export const OPENROUTER_API_KEY: string =
+  import.meta.env.VITE_OPENROUTER_API_KEY ?? "";
