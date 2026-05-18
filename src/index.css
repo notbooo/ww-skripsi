@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #0b0f14;
+  color: #d6dce5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui,
+    sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+/* Inputs ≥16px so iOS Safari never zoom-jumps on focus mid-dictation. */
+textarea,
+input,
+button,
+select {
+  font-family: inherit;
+  font-size: 17px;
+}
+
+textarea {
+  field-sizing: content; /* progressive enhancement; JS handles fallback */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: #4b82c4;
+  color: #0b0f14;
+}
+
+/* Calm 200ms progress fill; nothing else animates aggressively. */
+.bar-fill {
+  transition: width 200ms ease-out;
+}
