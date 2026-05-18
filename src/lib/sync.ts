@@ -7,6 +7,7 @@ import {
   pushSnapshot,
   type SnapshotPayload,
 } from "./supabase";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, SYNC_KEY } from "../config";
 
 type SyncState = "off" | "idle" | "syncing" | "offline" | "error";
 
@@ -29,9 +30,8 @@ let applyingRemote = false;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 
 function ctx() {
-  const s = st().settings;
-  const client = getClient(s.supabaseUrl, s.supabaseAnonKey);
-  const key = s.syncKey.trim();
+  const client = getClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const key = SYNC_KEY.trim();
   if (!client || !key) return null;
   return { client, key };
 }
@@ -149,15 +149,11 @@ export async function pullNow(): Promise<void> {
 // ---- Hook mounted once at app root ----
 
 export function useCloudSync(): void {
-  const supabaseUrl = useStore((s) => s.settings.supabaseUrl);
-  const supabaseAnonKey = useStore((s) => s.settings.supabaseAnonKey);
-  const syncKey = useStore((s) => s.settings.syncKey);
-
   useEffect(() => {
+    // Config is baked in, so sync always runs — no setup, no gating.
     if (ctx()) void reconcile();
     else rt().set({ state: "off", message: null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabaseUrl, supabaseAnonKey, syncKey]);
+  }, []);
 
   useEffect(() => {
     const unsub = useStore.subscribe((s, prev) => {

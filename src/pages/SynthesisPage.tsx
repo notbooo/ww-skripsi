@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import { useStore } from "../store/useStore";
+import { OPENROUTER_API_KEY } from "../config";
 import {
   CELLS,
   STAGES,
@@ -18,7 +18,8 @@ const PRIORITY_CELLS = CELLS.filter((c) => c.priority);
 
 export default function SynthesisPage() {
   const state = useStore();
-  const { apiKey, model, synthesisPrompt } = state.settings;
+  const { model, synthesisPrompt } = state.settings;
+  const apiKey = OPENROUTER_API_KEY;
 
   const [kind, setKind] = useState<ScopeKind>("full");
   const [stageId, setStageId] = useState(STAGES[0].id);
@@ -159,10 +160,8 @@ export default function SynthesisPage() {
 
       {!apiKey.trim() && (
         <div className="mb-4 rounded-xl border border-st-progress/40 bg-st-progress/10 p-3 text-[13px] text-ink">
-          API key OpenRouter belum diatur.{" "}
-          <Link to="/settings" className="text-accent underline">
-            Buka Pengaturan
-          </Link>
+          Fitur sintesis AI belum diaktifkan (OpenRouter key belum dipasang
+          di build). Pengumpulan data & cadangan cloud tetap berjalan normal.
         </div>
       )}
       {!hasAnyData && (

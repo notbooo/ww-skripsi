@@ -3,7 +3,6 @@ import Layout from "../components/Layout";
 import { useStore, isDirty } from "../store/useStore";
 import { DEFAULT_SYNTHESIS_PROMPT } from "../data/synthesisPrompt";
 import { DEFAULT_MODEL, FALLBACK_MODEL } from "../lib/openrouter";
-import { SETUP_SQL } from "../lib/supabase";
 import { useSyncRuntime, syncNow, pullNow } from "../lib/sync";
 
 export default function SettingsPage() {
@@ -20,7 +19,7 @@ export default function SettingsPage() {
       cells,
       answers,
       syntheses,
-      settings: { ...settings, apiKey: "" }, // never export the key
+      settings,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
@@ -41,11 +40,7 @@ export default function SettingsPage() {
           cells: d.cells ?? s.cells,
           answers: d.answers ?? s.answers,
           syntheses: d.syntheses ?? s.syntheses,
-          settings: {
-            ...s.settings,
-            ...(d.settings ?? {}),
-            apiKey: s.settings.apiKey, // keep current key
-          },
+          settings: { ...s.settings, ...(d.settings ?? {}) },
         }));
         setMsg("Data berhasil dipulihkan.");
       } catch {
@@ -57,23 +52,6 @@ export default function SettingsPage() {
   return (
     <Layout title="Pengaturan">
       <div className="space-y-7">
-        <section>
-          <label className="mb-1.5 block text-[14px] font-semibold text-ink">
-            OpenRouter API Key
-          </label>
-          <input
-            type="password"
-            value={settings.apiKey}
-            onChange={(e) => setSettings({ apiKey: e.target.value })}
-            placeholder="sk-or-..."
-            className="h-12 w-full rounded-xl border border-line bg-panel px-3 text-[15px] text-ink outline-none focus:border-accent"
-          />
-          <p className="mt-1.5 text-[12px] text-ink-dim">
-            Disimpan hanya di browser ini (localStorage). Pakai key berlimit
-            kecil — key terlihat di sisi klien.
-          </p>
-        </section>
-
         <section>
           <label className="mb-1.5 block text-[14px] font-semibold text-ink">
             Model
@@ -203,27 +181,18 @@ export default function SettingsPage() {
 }
 
 function SupabaseSection() {
-  const settings = useStore((s) => s.settings);
-  const setSettings = useStore((s) => s.setSettings);
   const dirty = useStore(isDirty);
   const lastPushedAt = useStore((s) => s.sync.lastPushedAt);
   const { state, message } = useSyncRuntime();
 
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [showSql, setShowSql] = useState(false);
-
-  const configured =
-    !!settings.supabaseUrl.trim() &&
-    !!settings.supabaseAnonKey.trim() &&
-    !!settings.syncKey.trim();
 
   async function guard(fn: () => Promise<unknown>) {
     setBusy(true);
     setNote(null);
     try {
-      const r = await fn();
-      if (typeof r === "string") setNote(r);
+      await fn();
     } catch (e) {
       setNote(e instanceof Error ? e.message : String(e));
     } finally {
@@ -231,133 +200,48 @@ function SupabaseSection() {
     }
   }
 
-  const status = !configured
-    ? "Belum dikonfigurasi"
-    : state === "syncing"
-    ? "Menyinkronkan…"
-    : state === "offline"
-    ? "Offline — data aman di perangkat, sinkron otomatis saat online"
-    : state === "error"
-    ? `Gagal: ${message ?? "tidak diketahui"}`
-    : dirty
-    ? "Ada perubahan belum tersinkron"
-    : lastPushedAt
-    ? `Tersinkron ${new Date(lastPushedAt).toLocaleString("id-ID")}`
-    : "Siap (belum ada perubahan)";
+  const status =
+    state === "syncing"
+      ? "Menyinkronkan…"
+      : state === "offline"
+      ? "Offline — data aman di perangkat, sinkron otomatis saat online"
+      : state === "error"
+      ? `Gagal: ${message ?? "tidak diketahui"}`
+      : dirty
+      ? "Ada perubahan belum tersinkron"
+      : lastPushedAt
+      ? `Tersinkron ${new Date(lastPushedAt).toLocaleString("id-ID")}`
+      : "Aktif — sinkron otomatis";
 
   const statusColor =
     state === "error"
       ? "text-red-300"
       : state === "offline" || dirty
       ? "text-st-progress"
-      : configured
-      ? "text-st-done"
-      : "text-ink-dim";
+      : "text-st-done";
 
   return (
     <section>
       <label className="mb-1.5 block text-[14px] font-semibold text-ink">
-        Sinkronisasi Cloud (Supabase)
+        Cadangan Cloud
       </label>
       <p className="mb-3 text-[12px] text-ink-dim">
-        Opsional. Cadangan otomatis + akses dari beberapa perangkat. Tetap
-        jalan offline — data lokal yang utama.
+        Otomatis & tanpa setup — semua perangkat berbagi data yang sama.
+        Tetap jalan offline; data lokal yang utama.
       </p>
-
       <p className={`mb-3 text-[13px] font-medium ${statusColor}`}>
         ● {status}
       </p>
-
-      <input
-        value={settings.supabaseUrl}
-        onChange={(e) => setSettings({ supabaseUrl: e.target.value })}
-        placeholder="https://xxxx.supabase.co"
-        className="mb-2 h-12 w-full rounded-xl border border-line bg-panel px-3 text-[15px] text-ink outline-none focus:border-accent"
-      />
-      <input
-        type="password"
-        value={settings.supabaseAnonKey}
-        onChange={(e) => setSettings({ supabaseAnonKey: e.target.value })}
-        placeholder="anon public key"
-        className="mb-2 h-12 w-full rounded-xl border border-line bg-panel px-3 text-[15px] text-ink outline-none focus:border-accent"
-      />
-      <p className="mb-3 text-[12px] text-ink-dim">
-        Anon key memang dirancang aman di sisi klien. Ambil dari Supabase →
-        Project Settings → API.
-      </p>
-
-      <label className="mb-1.5 block text-[13px] font-medium text-ink">
-        Sync key (rahasia — pakai key yang sama di semua perangkat)
-      </label>
-      <input
-        value={settings.syncKey}
-        onChange={(e) => setSettings({ syncKey: e.target.value })}
-        placeholder="rahasia panjang & sulit ditebak"
-        autoCapitalize="off"
-        autoCorrect="off"
-        spellCheck={false}
-        className="mb-2 h-12 w-full rounded-xl border border-line bg-panel px-3 text-[15px] text-ink outline-none focus:border-accent"
-      />
-      <div className="mb-3 flex gap-2">
-        <button
-          onClick={() => setSettings({ syncKey: crypto.randomUUID() })}
-          className="h-11 flex-1 rounded-lg border border-line text-[13px] text-ink active:bg-panel"
-        >
-          Buat key baru
-        </button>
-        <button
-          disabled={!settings.syncKey.trim()}
-          onClick={() => {
-            navigator.clipboard.writeText(settings.syncKey);
-            setNote("Sync key disalin. Tempel di perangkat lain.");
-          }}
-          className="h-11 flex-1 rounded-lg border border-line text-[13px] text-ink disabled:opacity-40 active:bg-panel"
-        >
-          Salin key
-        </button>
-      </div>
-      <p className="mb-3 text-[12px] text-ink-dim">
-        Siapa pun yang tahu key ini bisa baca/tulis data — perlakukan seperti
-        password. Datanya hanya bisa diakses lewat key persis ini (tabel
-        terkunci RLS, tanpa login).
-      </p>
-
-      <button
-        onClick={() => setShowSql((v) => !v)}
-        className="mb-2 text-[13px] text-accent underline"
-      >
-        {showSql
-          ? "Sembunyikan"
-          : "Setup sekali: SQL (tabel + fungsi, tanpa auth)"}
-      </button>
-      {showSql && (
-        <div className="mb-3">
-          <p className="mb-2 text-[12px] text-ink-dim">
-            Buka Supabase → SQL Editor → tempel & Run. Tidak perlu setting
-            Auth apa pun.
-          </p>
-          <pre className="max-h-56 overflow-auto rounded-xl border border-line bg-panel p-3 text-[12px] leading-relaxed text-ink">
-            {SETUP_SQL}
-          </pre>
-          <button
-            onClick={() => navigator.clipboard.writeText(SETUP_SQL)}
-            className="mt-2 rounded-lg border border-line px-3 py-1.5 text-[13px] text-ink active:bg-panel"
-          >
-            Salin SQL
-          </button>
-        </div>
-      )}
-
       <div className="flex flex-wrap gap-2">
         <button
-          disabled={busy || !configured}
+          disabled={busy}
           onClick={() => guard(syncNow)}
           className="h-12 flex-1 rounded-xl bg-accent text-[14px] font-semibold text-bg disabled:opacity-40"
         >
           Sinkron sekarang
         </button>
         <button
-          disabled={busy || !configured}
+          disabled={busy}
           onClick={() => guard(pullNow)}
           className="h-12 flex-1 rounded-xl border border-line text-[14px] text-ink disabled:opacity-40"
         >

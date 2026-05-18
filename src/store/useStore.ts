@@ -14,14 +14,9 @@ interface CellData {
 }
 
 interface Settings {
-  apiKey: string;
   model: string;
   session: number; // 1..3, drives photo-ref naming
   synthesisPrompt: string;
-  // Cloud sync (optional, no auth). Not part of the synced snapshot.
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-  syncKey: string; // unguessable secret = the row id; same key across devices
 }
 
 interface Synthesis {
@@ -62,13 +57,9 @@ interface State {
 const EMPTY_CELL: CellData = { notes: "", photoRefs: [], doneOverride: false };
 
 const DEFAULT_SETTINGS: Settings = {
-  apiKey: "",
   model: DEFAULT_MODEL,
   session: 1,
   synthesisPrompt: DEFAULT_SYNTHESIS_PROMPT,
-  supabaseUrl: "",
-  supabaseAnonKey: "",
-  syncKey: "",
 };
 
 export const useStore = create<State>()(
