@@ -101,12 +101,18 @@ export default function InterviewPage() {
               ariaLabel={`Jawaban pertanyaan ${i + 1}`}
               placeholder="Dikte jawaban informan apa adanya…"
             />
-            <Link
-              to={`/cell/${q.cellId}`}
-              className="mt-1.5 inline-block text-[12px] text-ink-dim underline"
-            >
-              → mengisi sel: {cellTitle(q.cellId)}
-            </Link>
+            {q.cellId ? (
+              <Link
+                to={`/cell/${q.cellId}`}
+                className="mt-1.5 inline-block text-[12px] text-ink-dim underline"
+              >
+                → mengisi sel: {cellTitle(q.cellId)}
+              </Link>
+            ) : (
+              <span className="mt-1.5 inline-block text-[12px] text-ink-dim/70">
+                Profil / konteks (untuk deskripsi informan & pembahasan)
+              </span>
+            )}
           </li>
         ))}
       </ol>

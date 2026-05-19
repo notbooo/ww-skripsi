@@ -8,7 +8,11 @@ import {
   STAGE_BY_ID,
   cellTitle,
 } from "../data/model";
-import { QUESTIONS_BY_CELL, INFORMANT_BY_ID } from "../data/interviews";
+import {
+  QUESTIONS_BY_CELL,
+  CONTEXT_QUESTIONS,
+  INFORMANT_BY_ID,
+} from "../data/interviews";
 import { buildSynthesisUserContent } from "../data/synthesisPrompt";
 import { callOpenRouter } from "../lib/openrouter";
 
@@ -39,16 +43,22 @@ export default function SynthesisPage() {
   const cached = state.syntheses[scopeKey];
 
   const blocks = useMemo(() => {
+    const cellHasAnswer = (id: string) =>
+      (QUESTIONS_BY_CELL[id] ?? []).some((q) => state.answers[q.id]?.trim());
+
     const targets =
       kind === "full"
         ? CELLS.filter(
-            (c) => c.priority || state.cells[c.id]?.notes?.trim()
+            (c) =>
+              c.priority ||
+              state.cells[c.id]?.notes?.trim() ||
+              cellHasAnswer(c.id)
           )
         : kind === "stage"
         ? CELLS.filter((c) => c.stageId === stageId)
         : CELLS.filter((c) => c.id === cellId);
 
-    return targets.map((c) => {
+    const cellBlocks = targets.map((c) => {
       const data = state.cells[c.id];
       const interview = (QUESTIONS_BY_CELL[c.id] ?? []).map((q) => ({
         code: INFORMANT_BY_ID[q.informantId].code,
@@ -63,6 +73,28 @@ export default function SynthesisPage() {
         interview,
       };
     });
+
+    // Profil / persepsi / harapan — only for full or stage scope (informant
+    // context informs the whole BAB IV, not a single cell).
+    if (kind === "cell") return cellBlocks;
+    const ctx = CONTEXT_QUESTIONS.filter((q) =>
+      state.answers[q.id]?.trim()
+    ).map((q) => ({
+      code: INFORMANT_BY_ID[q.informantId].code,
+      q: q.text,
+      a: state.answers[q.id] ?? "",
+    }));
+    if (ctx.length === 0) return cellBlocks;
+    return [
+      {
+        heading: "Profil & Konteks Informan (lintas-tahap)",
+        priority: false,
+        fieldNotes: "",
+        photoRefs: [] as string[],
+        interview: ctx,
+      },
+      ...cellBlocks,
+    ];
   }, [kind, stageId, cellId, state.cells, state.answers]);
 
   const hasAnyData = blocks.some(

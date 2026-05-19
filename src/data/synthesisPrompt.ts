@@ -14,6 +14,7 @@ ATURAN BAHASA & GAYA
 - Jangan menyalin instruksi ini atau label internal ke dalam keluaran.
 
 STRUKTUR KELUARAN
+- Jika tersedia blok "Profil & Konteks Informan", buka dengan sub-bagian deskripsi informan (kode, peran, lama bekerja) lalu sub-bagian persepsi/kesadaran terhadap food waste sebelum pembahasan per tahap. Harapan/saran informan disalurkan ke bagian pembahasan/rekomendasi, bukan ke narasi tahap.
 - Gunakan hierarki sub-bab sesuai tahap yang diberikan (mis. 4.x Pengadaan, 4.x Penyimpanan, dst.). Jika hanya satu sel yang diminta, tulis satu sub-bagian fokus.
 - Untuk tiap tahap, narasikan empat dimensi secara mengalir (bukan poin terpisah): praktik/prosedur yang berjalan, penyebab timbulnya waste, volume & jenis waste, lalu pengelolaan yang dilakukan saat ini.
 - Akhiri tiap tahap dengan kalimat sintesis singkat yang menghubungkan temuan ke argumen pengelolaan food waste.
@@ -56,6 +57,9 @@ export function buildSynthesisUserContent(opts: {
   lines.push(`LINGKUP SINTESIS: ${opts.scopeLabel}`);
   lines.push(
     "Di bawah ini catatan lapangan mentah per sel. Sintesiskan sesuai aturan sistem. Bila sebuah sel kosong, tetap beri ⚠️ CATATAN PENGUMPULAN DATA."
+  );
+  lines.push(
+    'Jika ada blok "Profil & Konteks Informan", pakai untuk menyusun sub-bagian deskripsi informan (peran & lama bekerja, tanpa nama asli — hanya kode) dan analisis persepsi/kesadaran terhadap food waste; harapan/saran informan masukkan ke pembahasan & rekomendasi, bukan ke narasi per-tahap.'
   );
   lines.push("");
   for (const b of opts.blocks) {
